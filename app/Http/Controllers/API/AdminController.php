@@ -19,25 +19,25 @@ class AdminController extends Controller
     }
 
     // قبول الطلب (تغيير الحالة إلى approved)
-  public function approveProperty($id)
-{
-    $request = \App\Models\Requestt::find($id);
+    public function approveProperty($id)
+    {
+        $request = \App\Models\Requestt::find($id);
 
-    if (!$request) {
-        return response()->json(['error' => 'الطلب غير موجود.'], 404);
+        if (!$request) {
+            return response()->json(['error' => 'الطلب غير موجود.'], 404);
+        }
+
+        $request->status = 'accepted';  // تأكد أنها نصية
+        $request->save();
+
+        // تفعيل العقار المرتبط عند الموافقة
+        $property = $request->requestable;
+        if ($property) {
+            $property->update(['is_available' => true]); // تفعيل العقار
+        }
+
+        return response()->json(['message' => 'تم قبول الطلب وتفعيل العقار.']);
     }
-
-    $request->status = 'accepted';  // تأكد أنها نصية
-    $request->save();
-
-    // تفعيل العقار المرتبط عند الموافقة
-    $property = $request->requestable;
-    if ($property) {
-        $property->update(['is_available' => true]); // تفعيل العقار
-    }
-
-    return response()->json(['message' => 'تم قبول الطلب وتفعيل العقار.']);
-}
 
 
     // رفض الطلب (تغيير الحالة إلى rejected)
@@ -62,100 +62,100 @@ class AdminController extends Controller
 
 
     public function approveSubscription($id)
-{
-    $subscription = Subscription::findOrFail($id);
+    {
+        $subscription = Subscription::findOrFail($id);
 
-    if ($subscription->status !== 'pending') {
-        return response()->json(['message' => 'الاشتراك تمت معالجته مسبقاً.'], 400);
+        if ($subscription->status !== 'pending') {
+            return response()->json(['message' => 'الاشتراك تمت معالجته مسبقاً.'], 400);
+        }
+
+        // تعيين تاريخ البدء والانتهاء
+        $start = now();
+        $end = $subscription->subscription_type === 'monthly' ? $start->copy()->addMonth() : $start->copy()->addYear();
+
+        $subscription->update([
+            'starts_at' => $start,
+            'expires_at' => $end,
+            'status' => 'active',
+        ]);
+
+        return response()->json(['message' => 'تمت الموافقة على الاشتراك بنجاح.']);
     }
 
-    // تعيين تاريخ البدء والانتهاء
-    $start = now();
-    $end = $subscription->subscription_type === 'monthly' ? $start->copy()->addMonth() : $start->copy()->addYear();
+    public function rejectSubscription($id)
+    {
+        $subscription = Subscription::findOrFail($id);
 
-    $subscription->update([
-        'starts_at' => $start,
-        'expires_at' => $end,
-        'status' => 'active',
-    ]);
+        if ($subscription->status !== 'pending') {
+            return response()->json(['message' => 'الاشتراك تمت معالجته مسبقاً.'], 400);
+        }
 
-    return response()->json(['message' => 'تمت الموافقة على الاشتراك بنجاح.']);
-}
+        $subscription->update(['status' => 'rejected']);
 
-public function rejectSubscription($id)
-{
-    $subscription = Subscription::findOrFail($id);
-
-    if ($subscription->status !== 'pending') {
-        return response()->json(['message' => 'الاشتراك تمت معالجته مسبقاً.'], 400);
-    }
-
-    $subscription->update(['status' => 'rejected']);
-
-    return response()->json(['message' => 'تم رفض الاشتراك.']);
-}
-
-
-
- public function approveOfficeRequest($requestId)
-{
-    $request = Office::findOrFail($requestId);
-
-    if ($request->status !== 'pending') {
-        return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
+        return response()->json(['message' => 'تم رفض الاشتراك.']);
     }
 
 
 
-    // تحديث حالة الطلب إلى approved
-    $request->update(['status' => 'approved']);
-     $request->update(['free_ads' => 2]);
+    public function approveOfficeRequest($requestId)
+    {
+        $request = Office::findOrFail($requestId);
 
-    return response()->json(['message' => 'تمت الموافقة على المكتب وإنشاؤه بنجاح.'], 200);
-}
+        if ($request->status !== 'pending') {
+            return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
+        }
 
-public function rejectOfficeRequest($requestId)
-{
-    $office = Office::findOrFail($requestId); // ← تعديل من OfficeController إلى Office
 
-    if ($office->status !== 'pending') {
-        return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
+
+        // تحديث حالة الطلب إلى approved
+        $request->update(['status' => 'approved']);
+        $request->update(['free_ads' => 2]);
+
+        return response()->json(['message' => 'تمت الموافقة على المكتب وإنشاؤه بنجاح.'], 200);
     }
 
-    $office->delete(); // ← حذف المكتب بالكامل
+    public function rejectOfficeRequest($requestId)
+    {
+        $office = Office::findOrFail($requestId); // ← تعديل من OfficeController إلى Office
 
-    return response()->json(['message' => 'تم رفض الطلب وحذف المكتب بنجاح.'], 200);
-}
-public function getOfficesByViews()
-{
-    $offices = \App\Models\Office::with('image')->orderBy('views', 'desc')->get();
+        if ($office->status !== 'pending') {
+            return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
+        }
 
-    if ($offices->isEmpty()) {
+        $office->delete(); // ← حذف المكتب بالكامل
+
+        return response()->json(['message' => 'تم رفض الطلب وحذف المكتب بنجاح.'], 200);
+    }
+    public function getOfficesByViews()
+    {
+        $offices = \App\Models\Office::with('image')->orderBy('views', 'desc')->get();
+
+        if ($offices->isEmpty()) {
+            return response()->json([
+                'message' => 'لم يتم إضافة مكاتب للتطبيق بعد.'
+            ], 404);
+        }
+
         return response()->json([
-            'message' => 'لم يتم إضافة مكاتب للتطبيق بعد.'
-        ], 404);
+            'message' => 'تم جلب المكاتب حسب عدد المشاهدات.',
+            'data' => $offices
+        ], 200);
     }
 
-    return response()->json([
-        'message' => 'تم جلب المكاتب حسب عدد المشاهدات.',
-        'data' => $offices
-    ], 200);
-}
 
+    public function getOfficesByFollowers()
+    {
+        $offices = \App\Models\Office::with('image')->orderBy('followers_count', 'desc')->get();
 
-public function getOfficesByFollowers()
-{
-    $offices = \App\Models\Office::with('image')->orderBy('followers_count', 'desc')->get();
+        if ($offices->isEmpty()) {
+            return response()->json([
+                'message' => 'لم يتم إضافة مكاتب للتطبيق بعد.'
+            ], 404);
+        }
 
-    if ($offices->isEmpty()) {
         return response()->json([
-            'message' => 'لم يتم إضافة مكاتب للتطبيق بعد.'
-        ], 404);
+            'message' => 'تم جلب المكاتب حسب عدد المتابعين.',
+            'data' => $offices
+        ], 200);
     }
-
-    return response()->json([
-        'message' => 'تم جلب المكاتب حسب عدد المتابعين.',
-        'data' => $offices
-    ], 200);
-}
 }

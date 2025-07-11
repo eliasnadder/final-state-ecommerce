@@ -18,131 +18,131 @@ class PropertiesController extends Controller
 {
     use UploadImagesTrait;
     public function propertyStore(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'title' => 'required|string|max:255',
-        'description' => 'required|string',
-        'price' => 'required|numeric',
-        'governorate' => 'required|string|max:255',
-        'location' => 'required|string',
-        'latitude' => 'required|numeric',
-        'longitude' => 'required|numeric',
-        'area' => 'nullable|numeric',
-        'floor_number' => 'nullable|integer',
-        'ad_type' => 'required|in:sale,rent',
-        'type' => 'required|in:apartment,villa,office,land,commercial,farm,building,chalet',
-        'position' => 'required|in:sale,sold,rent',
-        'bathrooms' => 'required|integer',
-        'rooms' => 'required|integer',
-        'seller_type' => 'required|in:owner,agent,developer',
-        'direction' => 'required|string',
-        'furnishing' => 'required|in:furnished,unfurnished,semi-furnished',
-        'url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        'Vurl' => 'nullable|mimes:mp4,mov,avi,wmv|max:10000',
-        'is_offer' => 'nullable|boolean',
-        'offer_expires_at' => 'required_if:is_offer,true|nullable|date',
-        'currency' => 'nullable|in:SYP,USD,EUR',
-        'features' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
-    }
-
-    try {
-        DB::beginTransaction();
-
-        $authOffice = auth('office-api')->user();
-
-        if (!$authOffice || !$authOffice instanceof \App\Models\Office) {
-            return response()->json(['error' => 'Only offices can create properties'], 403);
-        }
-
-        $subscription = $authOffice->currentSubscription;
-
-        if ($authOffice->free_ads == 0 && (!$subscription || $subscription->status !== 'active' || $subscription->expires_at < now())) {
-            return response()->json([
-                'message' => 'انتهت الإعلانات المجانية ولا يوجد اشتراك مفعل. الرجاء طلب اشتراك من الإدارة.',
-                'subscription_status' => optional($subscription)->status,
-            ], 403);
-        }
-
-        // إنشاء العقار بوضعية "غير مفعل" بانتظار موافقة الإدارة
-        $property = Property::create([
-            'owner_id' => $authOffice->id,
-            'owner_type' => \App\Models\Office::class,
-            'ad_number' => strtoupper(substr($request->governorate, 0, 2)) . '-' . strtoupper(uniqid()),
-            'title' => $request->title,
-            'description' => $request->description,
-            'price' => $request->price,
-            'governorate' => $request->governorate,
-            'location' => $request->location,
-            'latitude' => floatval(trim($request->latitude)),
-            'longitude' => floatval(trim($request->longitude)),
-            'area' => $request->area,
-            'floor_number' => $request->floor_number,
-            'ad_type' => $request->ad_type,
-            'type' => $request->type,
-            'position' => $request->position,
-            'is_offer' => $request->is_offer ?? false,
-            'offer_expires_at' => $request->offer_expires_at ?? now()->addDays(5),
-            'currency' => $request->currency ?? 'USD',
-            'views' => 0,
-            'bathrooms' => $request->bathrooms,
-            'rooms' => $request->rooms,
-            'seller_type' => $request->seller_type,
-            'direction' => $request->direction,
-            'furnishing' => $request->furnishing,
-            'features' => $request->features,
-            // أو is_active => false حسب تصميمك
+    {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
+            'governorate' => 'required|string|max:255',
+            'location' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'area' => 'nullable|numeric',
+            'floor_number' => 'nullable|integer',
+            'ad_type' => 'required|in:sale,rent',
+            'type' => 'required|in:apartment,villa,office,land,commercial,farm,building,chalet',
+            'position' => 'required|in:sale,sold,rent',
+            'bathrooms' => 'required|integer',
+            'rooms' => 'required|integer',
+            'seller_type' => 'required|in:owner,agent,developer',
+            'direction' => 'required|string',
+            'furnishing' => 'required|in:furnished,unfurnished,semi-furnished',
+            'url' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'Vurl' => 'nullable|mimes:mp4,mov,avi,wmv|max:10000',
+            'is_offer' => 'nullable|boolean',
+            'offer_expires_at' => 'required_if:is_offer,true|nullable|date',
+            'currency' => 'nullable|in:SYP,USD,EUR',
+            'features' => 'nullable|string',
         ]);
 
-        if ($request->hasFile('url')) {
-            $path = $this->uploadImage($request->file('url'), 'property');
-            $property->images()->create(['url' => $path]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        if ($request->hasFile('Vurl')) {
-            $file = $request->file('Vurl');
-            $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('properties/videos', $fileName, 'public');
-            $videoUrl = 'storage/' . $filePath;
+        try {
+            DB::beginTransaction();
 
-            $property->video()->create([
-                'vurl' => $videoUrl,
-                'videoable_id' => $property->id,
-                'videoable_type' => Property::class,
+            $authOffice = auth('office-api')->user();
+
+            if (!$authOffice || !$authOffice instanceof \App\Models\Office) {
+                return response()->json(['error' => 'Only offices can create properties'], 403);
+            }
+
+            $subscription = $authOffice->currentSubscription;
+
+            if ($authOffice->free_ads == 0 && (!$subscription || $subscription->status !== 'active' || $subscription->expires_at < now())) {
+                return response()->json([
+                    'message' => 'انتهت الإعلانات المجانية ولا يوجد اشتراك مفعل. الرجاء طلب اشتراك من الإدارة.',
+                    'subscription_status' => optional($subscription)->status,
+                ], 403);
+            }
+
+            // إنشاء العقار بوضعية "غير مفعل" بانتظار موافقة الإدارة
+            $property = Property::create([
+                'owner_id' => $authOffice->id,
+                'owner_type' => \App\Models\Office::class,
+                'ad_number' => strtoupper(substr($request->governorate, 0, 2)) . '-' . strtoupper(uniqid()),
+                'title' => $request->title,
+                'description' => $request->description,
+                'price' => $request->price,
+                'governorate' => $request->governorate,
+                'location' => $request->location,
+                'latitude' => floatval(trim($request->latitude)),
+                'longitude' => floatval(trim($request->longitude)),
+                'area' => $request->area,
+                'floor_number' => $request->floor_number,
+                'ad_type' => $request->ad_type,
+                'type' => $request->type,
+                'position' => $request->position,
+                'is_offer' => $request->is_offer ?? false,
+                'offer_expires_at' => $request->offer_expires_at ?? now()->addDays(5),
+                'currency' => $request->currency ?? 'USD',
+                'views' => 0,
+                'bathrooms' => $request->bathrooms,
+                'rooms' => $request->rooms,
+                'seller_type' => $request->seller_type,
+                'direction' => $request->direction,
+                'furnishing' => $request->furnishing,
+                'features' => $request->features,
+                // أو is_active => false حسب تصميمك
             ]);
+
+            if ($request->hasFile('url')) {
+                $path = $this->uploadImage($request->file('url'), 'property');
+                $property->images()->create(['url' => $path]);
+            }
+
+            if ($request->hasFile('Vurl')) {
+                $file = $request->file('Vurl');
+                $fileName = uniqid() . '.' . $file->getClientOriginalExtension();
+                $filePath = $file->storeAs('properties/videos', $fileName, 'public');
+                $videoUrl = 'storage/' . $filePath;
+
+                $property->video()->create([
+                    'vurl' => $videoUrl,
+                    'videoable_id' => $property->id,
+                    'videoable_type' => Property::class,
+                ]);
+            }
+
+            // خصم إعلان واحد
+            $authOffice->free_ads -= 1;
+            $authOffice->save();
+
+            // إنشاء الطلب
+            \App\Models\Requestt::create([
+                'office_id' => $authOffice->id,
+                'requestable_id' => $property->id,
+                'requestable_type' => \App\Models\Property::class,
+                'status' => 'pending',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'تم إرسال طلب إنشاء العقار بنجاح. سيتم مراجعته من قبل الإدارة.',
+                'data' => $property->load('images', 'video'),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'حدث خطأ أثناء إنشاء الإعلان.',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 500);
         }
-
-        // خصم إعلان واحد
-        $authOffice->free_ads -= 1;
-        $authOffice->save();
-
-        // إنشاء الطلب
-        \App\Models\Requestt::create([
-            'office_id' => $authOffice->id,
-            'requestable_id' => $property->id,
-            'requestable_type' => \App\Models\Property::class,
-            'status' => 'pending',
-        ]);
-
-        DB::commit();
-
-        return response()->json([
-            'message' => 'تم إرسال طلب إنشاء العقار بنجاح. سيتم مراجعته من قبل الإدارة.',
-            'data' => $property->load('images', 'video'),
-        ], 201);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'error' => 'حدث خطأ أثناء إنشاء الإعلان.',
-            'message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-        ], 500);
     }
-}
 
 
     public function changePropertyStatus(Request $request, $propertyId)
@@ -204,31 +204,31 @@ class PropertiesController extends Controller
         return response()->json($properties);
     }
 
-   public function showProperty($id)
-{
-    $property = Property::find($id);
+    public function showProperty($id)
+    {
+        $property = Property::find($id);
 
-    if (!$property) {
-        return response()->json(['message' => 'not found'], 404);
+        if (!$property) {
+            return response()->json(['message' => 'not found'], 404);
+        }
+
+        $property->views += 1;
+        $property->save();
+
+        // تحميل العلاقات
+        $property->load(['owner', 'images', 'video']);
+
+        // جلب العقارات المرتبطة
+        $relaitedproperties = Property::where('type', $property->type)
+            ->where('ad_type', $property->ad_type)
+            ->with(['owner', 'images', 'video'])
+            ->get();
+
+        return response()->json([
+            'property' => $property,
+            'relaitedproperties' => $relaitedproperties
+        ]);
     }
-
-    $property->views += 1;
-    $property->save();
-
-    // تحميل العلاقات
-    $property->load(['owner', 'images', 'video']);
-
-    // جلب العقارات المرتبطة
-    $relaitedproperties = Property::where('type', $property->type)
-        ->where('ad_type', $property->ad_type)
-        ->with(['owner', 'images', 'video'])
-        ->get();
-
-    return response()->json([
-        'property' => $property,
-        'relaitedproperties' => $relaitedproperties
-    ]);
-}
 
 
     public function getPropertyVideos()

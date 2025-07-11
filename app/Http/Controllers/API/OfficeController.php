@@ -10,7 +10,6 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use App\Http\Controllers\API\OfficeController;
 
 class OfficeController extends Controller
 {    use UploadImagesTrait;
