@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('office_id')->constrained()->onDelete('cascade');
-           // $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            // $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->morphs('requestable');
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->unsignedBigInteger('target_id')->nullable();

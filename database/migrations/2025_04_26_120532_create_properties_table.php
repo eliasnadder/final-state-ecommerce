@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
-           $table->morphs('owner');// ممكن يكون تابع للمستخدم و ممكن يكون للمكتب
-           $table->string('ad_number')->unique();
-             $table->string('governorate')->nullable(); // المحافظ
+            $table->morphs('owner'); // ممكن يكون تابع للمستخدم و ممكن يكون للمكتب
+            $table->string('ad_number')->unique();
+            $table->string('governorate')->nullable(); // المحافظ
             $table->string('title');
             $table->text('description');
             $table->decimal('price', 12, 2);
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->decimal('area', 10, 2)->nullable();
             $table->integer('floor_number')->nullable();
             $table->enum('ad_type', ['sale', 'rent'])->default('sale');
-           $table->enum('type', ['apartment', 'villa', 'office', 'land', 'commercial','farm','building','chalet'])->default('apartment');
+            $table->enum('type', ['apartment', 'villa', 'office', 'land', 'commercial', 'farm', 'building', 'chalet'])->default('apartment');
             $table->enum('position', ['available', 'sold', 'rented'])->default('available');
             $table->boolean('is_offer')->default(false);
             $table->timestamp('offer_expires_at')->nullable();

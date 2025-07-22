@@ -20,7 +20,6 @@ return new class extends Migration
              $table->string('password');
             $table->enum('type', ['office'])->default('office');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->string('document_path')->nullable(); // ملف الوثيقة
             $table->integer('free_ads')->default(0); // عدد الإعلانات المجانية
             $table->unsignedBigInteger('followers_count')->default(0);
             $table->unsignedBigInteger('views')->default(0);

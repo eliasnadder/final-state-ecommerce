@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('wanted_properties', function (Blueprint $table) {
             $table->id();
-
-           $table->morphs('wanted_Pable');
-           $table->enum('buy_or_rent', ['buy', 'rent']);
-           $table->string('governorate')->nullable(); // المحافظة
-           $table->string('area')->nullable(); // المنطقة
-           $table->decimal('budget', 10, 2)->nullable(); // الميزانية
-           $table->text('description')->nullable();
+            $table->morphs('wanted_Pable');
+            $table->enum('buy_or_rent', ['buy', 'rent']);
+            $table->string('governorate')->nullable(); // المحافظة
+            $table->string('area')->nullable(); // المنطقة
+            $table->decimal('budget', 10, 2)->nullable(); // الميزانية
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
