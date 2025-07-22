@@ -14,5 +14,4 @@ class PropertyPayment extends Model
     {
         return $this->belongsTo(Property::class);
     }
-    
 }

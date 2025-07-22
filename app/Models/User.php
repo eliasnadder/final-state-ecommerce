@@ -2,20 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
-
 
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
     protected $fillable = ['name', 'phone', 'password'];
-          public function requests()
+    public function requests()
     {
         return $this->morphMany(Requestt::class, 'requestable');
     }
@@ -39,9 +36,9 @@ class User extends Authenticatable implements JWTSubject
     }
 
     public function followedOffices()
-{
-    return $this->belongsToMany(Office::class, 'office_followers', 'user_id', 'office_id');
-}
+    {
+        return $this->belongsToMany(Office::class, 'office_followers', 'user_id', 'office_id');
+    }
     public function propertyPayments()
     {
         return $this->hasMany(PropertyPayment::class);

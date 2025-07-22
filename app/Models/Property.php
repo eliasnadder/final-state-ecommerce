@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+
 class Property extends Model
 {
     use HasFactory;
@@ -39,7 +40,7 @@ class Property extends Model
 
     public function owner(): MorphTo
     {
-        return $this->morphTo(User::class);
+        return $this->morphTo();
     }
     public function images()
     {
@@ -53,17 +54,15 @@ class Property extends Model
 
 
     public function favorites()
-{
-    return $this->morphMany(Favorite::class, 'favoriteable');
-}
+    {
+        return $this->morphMany(Favorite::class, 'favoriteable');
+    }
     public function requests()
     {
-         return $this->morphMany(Request::class, 'requestable');
+        return $this->morphMany(Request::class, 'requestable');
     }
     public function propertyPayments()
     {
-      return $this->hasMany(PropertyPayment::class);
+        return $this->hasMany(PropertyPayment::class);
     }
-
-
 }
