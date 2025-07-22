@@ -1,80 +1,80 @@
 <?php
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 class Office extends  Authenticatable implements JWTSubject
 {
+    protected $fillable = [
+        'name',
+        'phone',
+        'password', // ✅ تأكد أنه موجود
+        'description',
+        'location',
+        'status',
+        'free_ads',
+        'followers_count',
+        'views',
+    ];
 
+    public function favorites()
+    {
+        return $this->morphMany(Favorite::class, 'favoriteable');
+    }
 
-   protected $fillable = [
-    'name',
-    'phone',
-    'password',// ✅ تأكد أنه موجود
-    'description',
-    'location',
-    'document_path',
-    'status',
-    'free_ads',
-    'followers_count',
-    'views',
-];
-public function favorites()
-{
-    return $this->morphMany(Favorite::class, 'favoriteable');
-}
-   public function subscriptions()
-{
-    return $this->hasMany(Subscription::class);
-}
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
 
-public function currentSubscription()
-{
-    return $this->hasOne(Subscription::class)
-        ->where('status', 'active')
-        ->where('starts_at', '<=', now())
-        ->where('expires_at', '>', now());
-}
-public function requests()
-{
-    return $this->hasMany(Requestt::class, 'office_id');
-}
+    public function currentSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->where('starts_at', '<=', now())
+            ->where('expires_at', '>', now());
+    }
 
+    public function requests()
+    {
+        return $this->hasMany(Requestt::class, 'office_id');
+    }
 
-
-
-
-  public function properties(): MorphMany
-{
-    return $this->morphMany(Property::class, 'owner');
-}
+    public function properties(): MorphMany
+    {
+        return $this->morphMany(Property::class, 'owner');
+    }
 
     public function image()
     {
         return $this->morphOne(Image::class, 'imageable');
     }
-    public function wantedProperties()
-{
-    return $this->morphMany(WantedProperty::class, 'wanted_Pable');
-}
-public function followers()
-{
-    return $this->belongsToMany(User::class, 'office_followers', 'office_id', 'user_id');
-}
 
-public function reviews()
-{
-    return $this->morphMany(Review::class, 'reviewable');
-}
-public function getJWTIdentifier()
+    public function document()
+    {
+        return $this->morphOne(Document::class, 'relate_to');
+    }
+
+    public function wantedProperties()
+    {
+        return $this->morphMany(WantedProperty::class, 'wanted_Pable');
+    }
+
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'office_followers', 'office_id', 'user_id');
+    }
+
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    public function getJWTIdentifier()
     {
         return $this->getKey();
     }
@@ -83,9 +83,9 @@ public function getJWTIdentifier()
     {
         return [];
     }
-public function pendingProperties()
-{
-    return $this->properties()->where('status', 'pending');
-}
 
+    public function pendingProperties()
+    {
+        return $this->properties()->where('status', 'pending');
+    }
 }
