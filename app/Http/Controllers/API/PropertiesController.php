@@ -5,14 +5,12 @@ namespace App\Http\Controllers\API;
 use App\Models\Property;
 use App\Models\Video;
 use Illuminate\Http\Request;
+use App\Models\Requestt;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Office;
-use App\Models\User;
 use App\Traits\UploadImagesTrait;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class PropertiesController extends Controller
 {
@@ -31,7 +29,7 @@ class PropertiesController extends Controller
             'floor_number' => 'nullable|integer',
             'ad_type' => 'required|in:sale,rent',
             'type' => 'required|in:apartment,villa,office,land,commercial,farm,building,chalet',
-            'position' => 'required|in:sale,sold,rent',
+            'position' => 'required|in:available,sold,rented',
             'bathrooms' => 'required|integer',
             'rooms' => 'required|integer',
             'seller_type' => 'required|in:owner,agent,developer',
@@ -120,7 +118,7 @@ class PropertiesController extends Controller
             $authOffice->save();
 
             // إنشاء الطلب
-            \App\Models\Requestt::create([
+            Requestt::create([
                 'office_id' => $authOffice->id,
                 'requestable_id' => $property->id,
                 'requestable_type' => \App\Models\Property::class,
@@ -143,7 +141,6 @@ class PropertiesController extends Controller
             ], 500);
         }
     }
-
 
     public function changePropertyStatus(Request $request, $propertyId)
     {
@@ -193,6 +190,7 @@ class PropertiesController extends Controller
             ], 500);
         }
     }
+
     //تابع يجلب جميع العقارات
     public function getAllproperty()
     {
@@ -229,7 +227,6 @@ class PropertiesController extends Controller
             'relaitedproperties' => $relaitedproperties
         ]);
     }
-
 
     public function getPropertyVideos()
     {
@@ -306,38 +303,4 @@ class PropertiesController extends Controller
 
         return response()->json($properties);
     }
-
-
-    // public function receiveCard(Request $request)
-    // {
-
-    //     $validated = $request->validate([
-    //         'card_number' => 'required|digits_between:13,19',
-    //         'expiry_month' => 'required|digits:2',
-    //         'expiry_year' => 'required|digits:4',
-    //         'cvv' => 'required|digits_between:3,4',
-    //     ]);
-    //     $authUser = JWTAuth::user();
-
-    //     if (!$authUser) {
-    //         return response()->json(['error' => 'Unauthorized'], 401);  // إذا لم يتم العثور على المستخدم
-    //     }
-
-
-    //     $owner_id = $authUser->id;
-    //     $owner_type = 'App\Models\User';
-
-    //     $user = User::find($authUser->id);
-    //     $user->ad_counter += 10;
-    //     $user->save();
-
-
-
-    //     // Dummy response
-    //     return response()->json([
-    //         'status' => 'success',
-    //         'message' => 'Card data received (demo only).',
-    //         'user' => $authUser,
-    //     ]);
-    // }
 }
