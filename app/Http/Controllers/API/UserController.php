@@ -4,8 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Models\User;
 use App\Models\Office;
-use App\Models\Favorite;
-use App\Models\Property;
 use Illuminate\Http\Request;
 use App\Traits\UploadImagesTrait;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +12,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Exceptions\JWTException;
-
 
 class UserController extends Controller
 {
@@ -26,56 +22,56 @@ class UserController extends Controller
         return '2';
     }
 
-public function login(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'phone' => 'required|string',
-        'password' => 'required|string',
-        'type' => 'required|in:user,office',
-    ]);
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|string',
+            'password' => 'required|string',
+            'type' => 'required|in:user,office',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'message' => 'Validation error',
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    $phone = $request->phone;
-    $password = $request->password;
-    $type = $request->type;
-
-    //  البحث حسب نوع الشخص
-    if ($type === 'user') {
-        $user = User::where('phone', $phone)->first();
-
-        if ($user && Hash::check($password, $user->password)) {
-            $token = JWTAuth::fromUser($user);
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Login successful.',
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'type' => 'user',
-                'data' => $user,
-            ]);
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
         }
-    } elseif ($type === 'office') {
-        $office = Office::where('phone', $phone)->first();
 
-        if ($office && Hash::check($password, $office->password)) {
-            $token = JWTAuth::fromUser($office); // ← Office يجب أن يطبق JWTSubject
-            return response()->json([
-                'message' => 'Login successful.',
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-                'type' => 'office',
-                'data' => $office,
-            ]);
+        $phone = $request->phone;
+        $password = $request->password;
+        $type = $request->type;
+
+        //  البحث حسب نوع الشخص
+        if ($type === 'user') {
+            $user = User::where('phone', $phone)->first();
+
+            if ($user && Hash::check($password, $user->password)) {
+                $token = JWTAuth::fromUser($user);
+                return response()->json([
+                    'message' => 'Login successful.',
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                    'type' => 'user',
+                    'data' => $user,
+                ]);
+            }
+        } elseif ($type === 'office') {
+            $office = Office::where('phone', $phone)->first();
+
+            if ($office && Hash::check($password, $office->password)) {
+                $token = JWTAuth::fromUser($office); // ← Office يجب أن يطبق JWTSubject
+                return response()->json([
+                    'message' => 'Login successful.',
+                    'access_token' => $token,
+                    'token_type' => 'Bearer',
+                    'type' => 'office',
+                    'data' => $office,
+                ]);
+            }
         }
+
+        return response()->json(['message' => 'Invalid phone or password'], 401);
     }
-
-    return response()->json(['message' => 'Invalid phone or password'], 401);
-}
 
 
     public function refresh()
@@ -86,6 +82,7 @@ public function login(Request $request)
         // إنشاء استجابة مع التوكن الجديد
         return $this->createNewToken($newToken);
     }
+
     // طريقة لإنشاء التوكن وإرجاعه كاستجابة
     protected function createNewToken($token)
     {
@@ -96,59 +93,60 @@ public function login(Request $request)
             'user' => auth()->user(),
         ]);
     }
+
     public function registerUser(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|between:3,25',
-        'phone' => 'required|digits:10|unique:users,phone',
-        'password' => 'required|string|min:8|confirmed',
-        'type' => 'required',
-        'url' => 'nullable|mimes:jpeg,png,jpg,gif|max:2048',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json($validator->errors()->toJson(), 400);
-    }
-
-    DB::beginTransaction();
-
-    try {
-        $user = \App\Models\User::create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'type' => 'user',
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|between:3,25',
+            'phone' => 'required|unique:users,phone',
+            'password' => 'required|string|min:8|confirmed',
+            'type' => 'required',
+            'url' => 'nullable|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if ($request->hasFile('url')) {
-            $imageUrl = $this->uploadImage($request->file('url'), 'users');
-            $user->image()->create([
-                'url' => $imageUrl,
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'password' => Hash::make($request->password),
+                'type' => 'user',
             ]);
-        }
 
-        $token = JWTAuth::fromUser($user);
-        if (!$token) {
+            if ($request->hasFile('url')) {
+                $imageUrl = $this->uploadImage($request->file('url'), 'users');
+                $user->image()->create([
+                    'url' => $imageUrl,
+                ]);
+            }
+
+            $token = JWTAuth::fromUser($user);
+            if (!$token) {
+                DB::rollBack();
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            Auth::login($user);
+            DB::commit();
+
+            return response()->json([
+                'token' => $this->createNewToken($token),
+            ]);
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return response()->json([
+                'error' => 'Something went wrong',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+            ], 500);
         }
-
-        Auth::login($user);
-        DB::commit();
-
-        return response()->json([
-            'token' => $this->createNewToken($token),
-        ]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'error' => 'Something went wrong',
-            'message' => $e->getMessage(),
-            'line' => $e->getLine(),
-            'file' => $e->getFile(),
-        ], 500);
     }
-}
 
     //تسجيل خروج
     public function logout(Request $request)
@@ -166,7 +164,7 @@ public function login(Request $request)
 
             // إرجاع رد بعد إلغاء التوكين
             return response()->json(['message' => 'User successfully signed out'], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // في حال حدوث خطأ في التحقق من التوكين
             return response()->json(['error' => 'Failed to log out', 'message' => $e->getMessage()], 500);
         }
