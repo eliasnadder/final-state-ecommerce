@@ -48,35 +48,35 @@ return [
 
     // ],
     'guards' => [
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'users',
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+            'hash' => false,
+        ],
+
+        'office-api' => [
+            'driver' => 'jwt',
+            'provider' => 'offices',
+            'hash' => false,
+        ],
     ],
 
-    'api' => [
-        'driver' => 'jwt',
-        'provider' => 'users',
-        'hash' => false,
-    ],
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
 
-    'office-api' => [
-        'driver' => 'jwt',
-        'provider' => 'offices',
-        'hash' => false,
+        'offices' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Office::class,
+        ],
     ],
-],
-
-'providers' => [
-    'users' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\User::class,
-    ],
-
-    'offices' => [
-        'driver' => 'eloquent',
-        'model' => App\Models\Office::class,
-    ],
-],
 
     /*
     |--------------------------------------------------------------------------
