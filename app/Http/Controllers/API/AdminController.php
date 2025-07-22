@@ -4,24 +4,35 @@ namespace App\Http\Controllers\API;
 
 use App\Models\Requestt;
 use App\Models\Subscription;
-use Illuminate\Http\Request;
+use App\Models\Office;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
+
 
 class AdminController extends Controller
-
-
 {
     // عرض قائمة الطلبات المعلقة
-    public function pandingRequest()
+    //? تمت اضافة احاضر مرفقات للمكتب من ملفات
+    public function pendingRequest()
     {
-        $requests = Requestt::where('status', 'pending')->with('requestable')->paginate(10);
+        $requests = Requestt::where('status', 'pending')
+            ->with([
+                'requestable' => function ($morphTo) {
+                    $morphTo->morphWith([
+                        Office::class => ['document', 'image'], // Load document and image for offices
+                        \App\Models\Property::class => ['images', 'owner'], // Load images and owner for properties
+                    ]);
+                }
+            ])
+            ->paginate(10);
+
         return response()->json($requests);
     }
 
     // قبول الطلب (تغيير الحالة إلى approved)
     public function approveProperty($id)
     {
-        $request = \App\Models\Requestt::find($id);
+        $request = Requestt::find($id);
 
         if (!$request) {
             return response()->json(['error' => 'الطلب غير موجود.'], 404);
@@ -49,6 +60,7 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'تم رفض الطلب.']);
     }
+
     // عرض الاشتراكات المعلقة
     public function pendingSubscription()
     {
@@ -59,7 +71,6 @@ class AdminController extends Controller
 
         return response()->json($pendingSubscriptions);
     }
-
 
     public function approveSubscription($id)
     {
@@ -95,19 +106,17 @@ class AdminController extends Controller
         return response()->json(['message' => 'تم رفض الاشتراك.']);
     }
 
-
-
     public function approveOfficeRequest($requestId)
     {
-        $request = Office::findOrFail($requestId);
+        $requestt = Requestt::findOrFail($requestId);
+        $request = Office::findOrFail($requestt->office_id);
 
         if ($request->status !== 'pending') {
             return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
         }
 
-
-
         // تحديث حالة الطلب إلى approved
+        $requestt->update(['status' => 'accepted']);
         $request->update(['status' => 'approved']);
         $request->update(['free_ads' => 2]);
 
@@ -116,19 +125,22 @@ class AdminController extends Controller
 
     public function rejectOfficeRequest($requestId)
     {
-        $office = Office::findOrFail($requestId); // ← تعديل من OfficeController إلى Office
+        $requestt = Requestt::findOrFail($requestId);
+        $office = Office::findOrFail($requestt->office_id);
 
         if ($office->status !== 'pending') {
             return response()->json(['message' => 'تمت معالجة هذا الطلب سابقًا.'], 400);
         }
 
+        $requestt->update(['status' => 'rejected']);
         $office->delete(); // ← حذف المكتب بالكامل
 
         return response()->json(['message' => 'تم رفض الطلب وحذف المكتب بنجاح.'], 200);
     }
+
     public function getOfficesByViews()
     {
-        $offices = \App\Models\Office::with('image')->orderBy('views', 'desc')->get();
+        $offices = \App\Models\Office::with(['image', 'document'])->orderBy('views', 'desc')->get();
 
         if ($offices->isEmpty()) {
             return response()->json([
@@ -142,10 +154,9 @@ class AdminController extends Controller
         ], 200);
     }
 
-
     public function getOfficesByFollowers()
     {
-        $offices = \App\Models\Office::with('image')->orderBy('followers_count', 'desc')->get();
+        $offices = \App\Models\Office::with(['image', 'document'])->orderBy('followers_count', 'desc')->get();
 
         if ($offices->isEmpty()) {
             return response()->json([
@@ -157,5 +168,114 @@ class AdminController extends Controller
             'message' => 'تم جلب المكاتب حسب عدد المتابعين.',
             'data' => $offices
         ], 200);
+    }
+
+    /**
+     * Get pending office requests with documents for admin review
+     */
+    public function getPendingOfficeRequests()
+    {
+        $pendingOffices = Office::with(['document', 'image'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($pendingOffices->isEmpty()) {
+            return response()->json([
+                'message' => 'لا توجد طلبات مكاتب معلقة.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'تم جلب طلبات المكاتب المعلقة بنجاح.',
+            'data' => $pendingOffices
+        ], 200);
+    }
+
+    /**
+     * Get pending office requests through the Requestt model with documents
+     */
+    public function getPendingOfficeRequestsWithDocuments()
+    {
+        $requests = Requestt::where('status', 'pending')
+            ->where('requestable_type', Office::class)
+            ->with([
+                'requestable' => function ($query) {
+                    $query->with(['document', 'image']);
+                }
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($requests->isEmpty()) {
+            return response()->json([
+                'message' => 'لا توجد طلبات مكاتب معلقة.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'تم جلب طلبات المكاتب المعلقة مع المستندات بنجاح.',
+            'data' => $requests
+        ], 200);
+    }
+
+    /**
+     * Get specific office with document
+     */
+    public function getOfficeWithDocument($officeId)
+    {
+        $office = Office::with(['document', 'image'])->find($officeId);
+
+        if (!$office) {
+            return response()->json([
+                'message' => 'المكتب غير موجود.'
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'تم جلب بيانات المكتب بنجاح.',
+            'data' => $office
+        ], 200);
+    }
+
+    /**
+     * Download office document
+     */
+    public function downloadOfficeDocument($officeId)
+    {
+        $office = Office::with('document')->find($officeId);
+
+        if (!$office) {
+            return response()->json([
+                'message' => 'المكتب غير موجود.'
+            ], 404);
+        }
+
+        if (!$office->document) {
+            return response()->json([
+                'message' => 'لا يوجد مستند مرفق لهذا المكتب.'
+            ], 404);
+        }
+
+        // Extract the file path from the URL
+        $documentUrl = $office->document->url;
+        $parsedUrl = parse_url($documentUrl);
+        $filePath = ltrim($parsedUrl['path'], '/');
+
+        // Remove the base path to get the actual file path
+        $filePath = str_replace(['storage/', 'pictures/'], '', $filePath);
+
+        // Check if file exists in storage
+        if (!Storage::disk('pictures')->exists($filePath)) {
+            return response()->json([
+                'message' => 'الملف غير موجود.'
+            ], 404);
+        }
+
+        // Get the full file path
+        $fullPath = Storage::disk('pictures')->path($filePath);
+
+        // Return file download response
+        return response()->download($fullPath);
     }
 }
