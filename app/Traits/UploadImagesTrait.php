@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,16 @@ trait UploadImagesTrait
         return null;
     }
 
+    public function uploadDocument($file, $folderName)
+    {
+        if ($file) {
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs($folderName, $fileName, 'pictures');
+            return Storage::disk('pictures')->url($path);
+        }
 
+        return null;
+    }
 
     public function uploadVideo($file, $folderName)
     {
