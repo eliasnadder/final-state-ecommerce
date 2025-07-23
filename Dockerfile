@@ -23,7 +23,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-RUN php artisan session:table && php artisan migrate --force
+RUN php artisan migrate --force
 
 # Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
