@@ -176,7 +176,7 @@ class PropertiesController extends Controller
             }
 
             // تحديث الحالة
-            $property->status = $request->status;
+            $property->position = $request->status;
             $property->save();
 
             return response()->json([
