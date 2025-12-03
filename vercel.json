@@ -8,7 +8,7 @@
     "routes": [
         { "src": "/build/(.*)", "dest": "/build/$1" },
         { "src": "/storage/(.*)", "dest": "/storage/$1" },
-        { "src": "/(.*)", "dest": "/routes/api.php" }
+        { "src": "/(.*)", "dest": "/api/index.php" }
     ],
     "env": {
         "APP_ENV": "production",
