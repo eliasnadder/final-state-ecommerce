@@ -21,11 +21,5 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr"
     },
-    "build": {
-        "env": {
-            "COMPOSER_VERSION": "2"
-        }
-    },
-    "buildCommand": "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && composer install --optimize-autoloader --no-dev --no-interaction && npm install && npm run build && php artisan migrate --force --no-interaction && php artisan config:cache && php artisan route:cache && php artisan view:cache",
-    "outputDirectory": "public"
+    "buildCommand": "npm install && npm run build" // بس لو عندك Vite أو JS، لو لا احذفه
 }
