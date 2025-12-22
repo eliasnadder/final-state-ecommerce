@@ -11,8 +11,8 @@ trait UploadImagesTrait
     {
         if ($file) {
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs($folderName, $fileName, 'pictures');
-            return Storage::disk('pictures')->url($path);
+            $path = $file->storeAs($folderName, $fileName, 's3');
+            return Storage::disk('s3')->url($path);
         }
 
         return null;
@@ -22,8 +22,8 @@ trait UploadImagesTrait
     {
         if ($file) {
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs($folderName, $fileName, 'pictures');
-            return Storage::disk('pictures')->url($path);
+            $path = $file->storeAs($folderName, $fileName, 's3');
+            return Storage::disk('s3')->url($path);
         }
 
         return null;
@@ -33,8 +33,8 @@ trait UploadImagesTrait
     {
         if ($file) {
             $fileName = time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($folderName, $fileName, 'pictures');  // تخزين الفيديو في الـ public
-            return Storage::disk('pictures')->url($path);  // إرجاع رابط الفيديو
+            $path = $file->storeAs($folderName, $fileName, 's3');  // تخزين الفيديو في الـ public
+            return Storage::disk('s3')->url($path);  // إرجاع رابط الفيديو
         }
 
         return null;
