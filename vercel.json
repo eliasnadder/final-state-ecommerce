@@ -28,7 +28,7 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr"
     },
-    "installCommand": "composer install --no-dev --optimize-autoloader && npm install",
-    "buildCommand": "npm run build",
+    "installCommand": "npm install",
+    "buildCommand": "bash build.sh",
     "outputDirectory": "public"
 }
