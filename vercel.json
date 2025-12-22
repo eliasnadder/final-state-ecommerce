@@ -5,14 +5,21 @@
             "runtime": "vercel-php@0.7.1"
         }
     },
-    "routes": [
-        { "src": "/build/(.*)", "dest": "/build/$1" },
-        { "src": "/storage/(.*)", "dest": "/storage/$1" },
-        { "src": "/(.*)", "dest": "/api/index.php" }
+    "rewrites": [{ "source": "/(.*)", "destination": "/api/index.php" }],
+    "headers": [
+        {
+            "source": "/build/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=31536000, immutable"
+                }
+            ]
+        }
     ],
     "env": {
         "APP_ENV": "production",
-        "APP_DEBUG": "false",
+        "APP_DEBUG": "true",
         "APP_URL": "https://final-state-ecommerce.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_ROUTES_CACHE": "/tmp/routes.php",
@@ -21,6 +28,7 @@
         "SESSION_DRIVER": "cookie",
         "LOG_CHANNEL": "stderr"
     },
-    "outputDirectory": "public",
-    "buildCommand": "npm install && npm run build"
+    "installCommand": "composer install --no-dev --optimize-autoloader && npm install",
+    "buildCommand": "npm run build",
+    "outputDirectory": "public"
 }
