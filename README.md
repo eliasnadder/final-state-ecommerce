@@ -1,155 +1,97 @@
 # Final State E-commerce
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/eliasnadder/final-state-ecommerce/main.yml?branch=main)]()
-
-## Table of Contents
-
-- [Final State E-commerce](#final-state-e-commerce)
-  - [Table of Contents](#table-of-contents)
-  - [Description](#description)
-  - [Features](#features)
-  - [Tech Stack](#tech-stack)
-  - [File Structure Overview](#file-structure-overview)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Configuration](#configuration)
-  - [Contributing](#contributing)
-  - [License](#license)
-
-## Description
-
-This project appears to be a Laravel-based e-commerce application.
+Backend/API application built with Laravel 12 and a Vite/Tailwind frontend toolchain.
 
 ## Features
 
-Key features of this project likely include:
-
--   User authentication and authorization
--   Product catalog management
--   Shopping cart functionality
--   Checkout process
--   Order management
+- JWT-based authentication for users and offices
+- Property listing and office management endpoints
+- Favorites, ratings, and office follow functionality
+- Admin approval and moderation endpoints
+- Visitor endpoints for browsing recent offers and properties
 
 ## Tech Stack
 
-The project utilizes the following technologies:
+- PHP 8.2+ / Laravel 12
+- MySQL/SQL database via Laravel migrations
+- JWT Auth (`tymon/jwt-auth`)
+- Sanctum (`laravel/sanctum`)
+- Vite + Tailwind CSS 4 + Axios
 
--   PHP (Laravel Framework)
--   Blade Templating Engine
--   JavaScript
--   CSS
--   Tailwind CSS
--   Vite
--   Docker
-
-Key dependencies include:
-
--   `laravel-vite-plugin`
--   `axios`
--   `concurrently`
--   `tailwindcss`
--   `vite`
-
-## File Structure Overview
+## Project Structure
 
 ```text
-.
-├── app/
-├── bootstrap/
-├── config/
-├── database/
-├── public/
-├── resources/
-├── routes/
-├── storage/
-├── tests/
-├── .editorconfig
-├── .env.example
-├── .gitattributes
-├── .gitignore
-├── Dockerfile
-├── artisan
-├── composer.json
-├── composer.lock
-├── package.json
-├── phpunit.xml
-├── render.yaml
-├── vite.config.js
-└── README.md
+app/            Application code (controllers, models, middleware)
+api/            Serverless entrypoint (Vercel)
+config/         Laravel configuration
+database/       Migrations, factories, seeders
+public/         Public web root
+resources/      Frontend assets/views
+routes/         API and web routes
+tests/          Feature and unit tests
 ```
 
 ## Prerequisites
 
--   PHP 8.1 or higher
--   Composer
--   Node.js
--   NPM or Yarn
+- PHP 8.2 or newer
+- Composer
+- Node.js + npm
+- A configured database
 
 ## Installation
 
-1.  Clone the repository:
+```bash
+git clone https://github.com/eliasnadder/final-state-ecommerce.git
+cd final-state-ecommerce
 
-    ```bash
-    git clone https://github.com/eliasnadder/final-state-ecommerce.git
-    cd final-state-ecommerce
-    ```
+composer install
+npm install
 
-2.  Install PHP dependencies:
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+```
 
-    ```bash
-    composer install
-    ```
+## Running Locally
 
-3.  Install JavaScript dependencies:
+Run full development stack (Laravel server, queue worker, log viewer, Vite):
 
-    ```bash
-    npm install # or yarn install
-    ```
+```bash
+composer dev
+```
 
-4.  Copy the `.env.example` file to `.env` and configure your database settings.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-5.  Generate an application key:
-
-    ```bash
-    php artisan key:generate
-    ```
-
-6.  Run database migrations:
-
-    ```bash
-    php artisan migrate
-    ```
-
-## Usage
-
-To start the development server:
+Or run frontend only:
 
 ```bash
 npm run dev
 ```
 
-To build the project for production:
+## Build
 
 ```bash
 npm run build
 ```
 
-## Configuration
+## Test
 
-The application can be configured using environment variables. Refer to the `.env.example` file for available options.
+```bash
+composer test
+```
 
-## Contributing
+## API Routes
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Main API routes are defined in `/routes/api.php`, including grouped routes for:
 
-Please make sure to update tests as appropriate.
+- `/user/*`
+- `/office/*`
+- `/visitor/*`
+- `/admin/*`
+
+## Deployment Notes
+
+- `api/index.php` provides the Vercel serverless entrypoint.
+- `vercel.json` is included for deployment configuration.
 
 ## License
 
-This project is open-sourced software licensed under the MIT license.
+MIT
